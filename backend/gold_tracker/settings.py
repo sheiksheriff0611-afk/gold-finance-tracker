@@ -47,6 +47,7 @@ AUTH_USER_MODEL = 'accounts.User'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,9 +76,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'gold_tracker.wsgi.application'
 
 # Database Configuration
-# Supports PostgreSQL (production/configured) and SQLite (zero-config fallback)
-DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').lower()
-if DB_ENGINE == 'postgresql':
+# Supports PostgreSQL (Render/production via DATABASE_URL or env vars) and SQLite (zero-config fallback)
+import dj_database_url
+
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif os.getenv('DB_ENGINE', 'sqlite').lower() == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -147,6 +158,7 @@ USE_TZ = True
 # Static & Media files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
