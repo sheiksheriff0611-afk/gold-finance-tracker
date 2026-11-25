@@ -3,8 +3,9 @@ services:
   - type: web
     name: gold-finance-backend
     runtime: python
-    buildCommand: "cd backend && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python seed_data.py"
-    startCommand: "cd backend && gunicorn gold_tracker.wsgi:application"
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input"
+    startCommand: "python manage.py migrate --no-input && python seed_data.py || true && gunicorn gold_tracker.wsgi:application"
     plan: free
     region: oregon
     envVars:
@@ -22,8 +23,9 @@ services:
   # 2. React Frontend Static Site
   - type: static
     name: gold-finance-frontend
-    buildCommand: "cd frontend && npm install && npm run build"
-    staticPublishPath: "./frontend/dist"
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "./dist"
     plan: free
     region: oregon
     envVars:

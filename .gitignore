@@ -33,6 +33,8 @@ backend/db.sqlite3
 backend/media/*
 !backend/media/.gitkeep
 media/
+staticfiles/
+backend/staticfiles/
 
 # Environment Variables & Secrets
 .env
