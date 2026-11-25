@@ -48,6 +48,61 @@ def login_view(request):
     })
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def setup_admin_view(request):
+    """Bootstrap endpoint to run migrations and seed admin user on fresh cloud deployment."""
+    from django.core.management import call_command
+    from django.db import connection
+
+    messages = []
+    tables = connection.introspection.table_names()
+    if 'accounts_user' not in tables:
+        call_command('migrate', interactive=False)
+        messages.append("Migrations applied successfully.")
+
+    admin_user, created = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'email': 'admin@goldfinance.com',
+            'first_name': 'Rajesh',
+            'last_name': 'Sharma',
+            'role': 'ADMIN',
+            'employee_id': 'ADM-1001',
+            'phone': '+91 98765 43210',
+            'address': 'Headquarters, 5th Floor, Anna Salai, Chennai',
+            'is_staff': True,
+            'is_superuser': True,
+            'status': 'ACTIVE',
+        }
+    )
+    admin_user.set_password('admin123')
+    admin_user.is_staff = True
+    admin_user.is_superuser = True
+    admin_user.status = 'ACTIVE'
+    admin_user.role = 'ADMIN'
+    admin_user.save()
+    messages.append("Admin account enabled: username 'admin', password 'admin123'.")
+
+    try:
+        import seed_data
+        seed_data.seed()
+        messages.append("Team hierarchy (coordinators, field executives) seeded.")
+    except Exception as e:
+        messages.append(f"Seeding details: {str(e)}")
+
+    return Response({
+        'status': 'success',
+        'message': 'Admin login enabled successfully!',
+        'admin': {
+            'username': 'admin',
+            'password': 'admin123',
+            'role': 'ADMIN'
+        },
+        'details': messages
+    })
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def me_view(request):

@@ -4,7 +4,8 @@ from .views import (
     login_view, me_view, update_profile_view, change_password_view,
     EmployeeViewSet, coordinator_list_view, reassign_coordinator_view,
     coordinator_workload_view, employee_history_view,
-    EmployeeTargetViewSet, dashboard_stats_view, cities_branches_view
+    EmployeeTargetViewSet, dashboard_stats_view, cities_branches_view,
+    setup_admin_view
 )
 
 router = DefaultRouter()
@@ -13,6 +14,7 @@ router.register(r'targets', EmployeeTargetViewSet, basename='targets')
 
 urlpatterns = [
     path('login/', login_view, name='login'),
+    path('setup-admin/', setup_admin_view, name='setup-admin'),
     path('me/', me_view, name='me'),
     path('profile/', update_profile_view, name='update-profile'),
     path('change-password/', change_password_view, name='change-password'),

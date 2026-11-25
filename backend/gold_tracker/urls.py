@@ -120,6 +120,7 @@ def api_root_view(request):
                 
                 <div class="links">
                     <a href="/admin/" class="btn btn-primary">Open Django Admin Portal</a>
+                    <a href="/api/accounts/setup-admin/" class="btn btn-secondary">⚡ Enable / Reset Admin Account</a>
                     <a href="/api/accounts/cities-branches/" class="btn btn-secondary">Test API: Cities & Branches</a>
                 </div>
 
