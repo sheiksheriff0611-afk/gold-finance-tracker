@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const envApiUrl = import.meta.env.VITE_API_URL;
-const BASE_URL = envApiUrl 
+const BASE_URL = envApiUrl
   ? (envApiUrl.endsWith('/') ? envApiUrl.slice(0, -1) : envApiUrl)
   : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://127.0.0.1:8000'
-      : 'https://gold-finance-tracker-1.onrender.com');
+    ? 'http://127.0.0.1:8000'
+    : 'https://gold-finance-tracker-1.onrender.com');
 
 const API_BASE_URL = `${BASE_URL}/api`;
 

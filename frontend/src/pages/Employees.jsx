@@ -26,7 +26,11 @@ import {
   FileBadge,
   Layers,
   History,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  Navigation,
+  IdCard,
+  X
 } from 'lucide-react';
 
 const DEFAULT_CITIES_BRANCHES = [
@@ -242,6 +246,9 @@ const Employees = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyData, setHistoryData] = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedEmp, setSelectedEmp] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Reassignment form
   const [selectedExecIds, setSelectedExecIds] = useState([]);
@@ -400,6 +407,34 @@ const Employees = () => {
       console.error('Failed to load history:', err);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const openDetailModal = async (empOrId) => {
+    if (!empOrId) return;
+    let empObj = null;
+    const targetId = typeof empOrId === 'object' ? (empOrId.id || empOrId.coordinator_id) : empOrId;
+
+    empObj = employees.find(e => e.id === targetId);
+    if (!empObj && typeof empOrId === 'object') {
+      empObj = empOrId;
+    }
+
+    setSelectedEmp(empObj || null);
+    setDetailModalOpen(true);
+
+    if (targetId) {
+      setLoadingDetail(true);
+      try {
+        const res = await api.get(`/accounts/employees/${targetId}/`);
+        if (res.data) {
+          setSelectedEmp(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch latest employee details:', err);
+      } finally {
+        setLoadingDetail(false);
+      }
     }
   };
 
@@ -689,14 +724,27 @@ const Employees = () => {
                       <tr key={emp.id} className="hover:bg-[#111e3f]/50 transition">
                         <td className="py-3 px-3">
                           <div className="flex items-center space-x-2.5">
-                            <div className="w-8 h-8 rounded-full bg-[#16254e] border border-amber-500/30 flex items-center justify-center text-amber-300 font-bold text-xs shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => openDetailModal(emp)}
+                              className="w-8 h-8 rounded-full bg-[#16254e] hover:bg-red-950/70 border border-amber-500/30 hover:border-red-500 flex items-center justify-center text-amber-300 hover:text-red-300 font-bold text-xs shrink-0 transition cursor-pointer"
+                              title="Click to view full employee particulars"
+                            >
                               {emp.first_name ? emp.first_name[0] : emp.username[0].toUpperCase()}
-                            </div>
+                            </button>
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <p className="font-semibold text-slate-200">
-                                  {emp.first_name ? `${emp.first_name} ${emp.last_name || ''}` : emp.username}
-                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => openDetailModal(emp)}
+                                  className="text-left font-bold text-slate-100 hover:text-red-400 transition cursor-pointer group flex items-center gap-1.5"
+                                  title="Click to view full employee particulars"
+                                >
+                                  <span className="group-hover:underline underline-offset-2">
+                                    {emp.first_name ? `${emp.first_name} ${emp.last_name || ''}` : emp.username}
+                                  </span>
+                                  <Eye className="w-3 h-3 text-slate-400 group-hover:text-red-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                                </button>
                                 {emp.id === user?.id && (
                                   <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-bold">
                                     You
@@ -745,10 +793,17 @@ const Employees = () => {
                         <td className="py-3 px-3">
                           {emp.assigned_coordinator_name ? (
                             <div>
-                              <p className="text-slate-200 font-medium flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => emp.assigned_coordinator && openDetailModal(emp.assigned_coordinator)}
+                                className={`text-slate-200 font-medium flex items-center gap-1 text-left transition ${emp.assigned_coordinator ? 'hover:text-red-400 cursor-pointer group' : ''}`}
+                                title={emp.assigned_coordinator ? "Click to view coordinator details" : ""}
+                              >
                                 <UserCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                <span>{emp.assigned_coordinator_name}</span>
-                              </p>
+                                <span className={emp.assigned_coordinator ? "group-hover:underline" : ""}>
+                                  {emp.assigned_coordinator_name}
+                                </span>
+                              </button>
                               {emp.assigned_coordinator_code && (
                                 <p className="text-[10px] text-amber-400 font-mono mt-0.5">
                                   ID: {emp.assigned_coordinator_code}
@@ -782,6 +837,14 @@ const Employees = () => {
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => openDetailModal(emp)}
+                              className="px-2.5 py-1 rounded bg-[#111e3f] hover:bg-red-950/60 text-slate-200 hover:text-red-300 border border-slate-700/50 hover:border-red-500/40 transition flex items-center gap-1 text-[11px] cursor-pointer"
+                              title="View Full Employee Particulars"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-red-400" />
+                              <span>Details</span>
+                            </button>
                             <button
                               onClick={() => openHistoryModal(emp.id)}
                               className="px-2.5 py-1 rounded bg-[#111e3f] hover:bg-[#1a2c5b] text-slate-200 hover:text-white transition flex items-center gap-1 text-[11px] cursor-pointer"
@@ -850,11 +913,24 @@ const Employees = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-bold text-amber-300 text-lg">
+                        <button
+                          type="button"
+                          onClick={() => openDetailModal(crd.coordinator_id)}
+                          className="w-12 h-12 rounded-xl bg-amber-500/20 hover:bg-red-950/60 border border-amber-500/40 hover:border-red-500 flex items-center justify-center font-bold text-amber-300 hover:text-red-400 text-lg transition cursor-pointer shrink-0"
+                          title="Click to view coordinator details"
+                        >
                           <Building className="w-6 h-6 text-amber-400" />
-                        </div>
+                        </button>
                         <div>
-                          <h4 className="text-base font-bold text-white">{crd.name}</h4>
+                          <button
+                            type="button"
+                            onClick={() => openDetailModal(crd.coordinator_id)}
+                            className="text-left text-base font-bold text-white hover:text-red-400 transition cursor-pointer group flex items-center gap-1.5"
+                            title="Click to view coordinator details"
+                          >
+                            <span className="group-hover:underline">{crd.name}</span>
+                            <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                          </button>
                           <p className="text-[11px] text-amber-400 font-mono">{crd.employee_id} • Project Coordinator</p>
                           {(crd.city || crd.branch) && (
                             <div className="flex flex-wrap items-center gap-1.5 mt-1">
@@ -913,7 +989,15 @@ const Employees = () => {
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-white">{e.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => openDetailModal(e.id)}
+                                    className="text-left font-semibold text-white hover:text-red-400 transition cursor-pointer group flex items-center gap-1"
+                                    title="Click to view executive details"
+                                  >
+                                    <span className="group-hover:underline">{e.name}</span>
+                                    <Eye className="w-3 h-3 text-slate-400 group-hover:text-red-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                                  </button>
                                   <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold">
                                     {e.employee_id}
                                   </span>
@@ -991,7 +1075,15 @@ const Employees = () => {
                         className="p-3 rounded-xl bg-[#0b1329] border border-[#1a2c5b] flex items-center justify-between text-xs"
                       >
                         <div>
-                          <p className="font-semibold text-white">{e.name}</p>
+                          <button
+                            type="button"
+                            onClick={() => openDetailModal(e.id)}
+                            className="text-left font-semibold text-white hover:text-red-400 transition cursor-pointer group flex items-center gap-1"
+                            title="Click to view executive details"
+                          >
+                            <span className="group-hover:underline">{e.name}</span>
+                            <Eye className="w-3 h-3 text-slate-400 group-hover:text-red-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                          </button>
                           <p className="text-[10px] text-amber-400 font-mono">{e.employee_id}</p>
                         </div>
                         <button
@@ -1539,6 +1631,337 @@ const Employees = () => {
                 </div>
               </div>
             ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Employee Complete Details Profile */}
+      {detailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="w-full max-w-2xl bg-[#0b1329] border border-red-500/30 rounded-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-red-950/90 via-[#101c3d] to-red-950/90 border-b border-red-500/30 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 text-white font-black text-xl flex items-center justify-center border-2 border-red-400/40 shadow-lg shadow-red-500/20 shrink-0">
+                  {selectedEmp?.first_name
+                    ? selectedEmp.first_name[0].toUpperCase()
+                    : selectedEmp?.name
+                    ? selectedEmp.name[0].toUpperCase()
+                    : selectedEmp?.username
+                    ? selectedEmp.username[0].toUpperCase()
+                    : 'U'}
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">
+                      {selectedEmp?.first_name
+                        ? `${selectedEmp.first_name} ${selectedEmp.last_name || ''}`
+                        : selectedEmp?.name || selectedEmp?.username || 'Staff Profile'}
+                    </h3>
+                    {selectedEmp?.employee_id && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 text-[11px] font-mono font-bold">
+                        {selectedEmp.employee_id}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <span className="px-2 py-0.5 rounded-md bg-[#16254e] text-amber-300 border border-amber-500/30 text-[10px] font-semibold">
+                      {selectedEmp?.role_display || selectedEmp?.role || 'Staff Member'}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                        selectedEmp?.is_working
+                          ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-slate-800 text-slate-400 border border-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          selectedEmp?.is_working ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                        }`}
+                      />
+                      {selectedEmp?.is_working ? 'On Field Duty' : 'Off Duty'}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                        selectedEmp?.status === 'ACTIVE'
+                          ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-rose-950/60 text-rose-300 border border-rose-500/30'
+                      }`}
+                    >
+                      {selectedEmp?.status_display || selectedEmp?.status || 'Active'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDetailModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title="Close Profile"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)] text-xs">
+              {loadingDetail && (
+                <div className="p-2 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300 text-center text-[11px] flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
+                  <span>Syncing latest field telemetry & status...</span>
+                </div>
+              )}
+
+              {/* Quick Communication & Location Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {selectedEmp?.phone ? (
+                  <a
+                    href={`tel:${selectedEmp.phone}`}
+                    className="p-2.5 rounded-xl bg-[#070c18] border border-[#1a2c5b] hover:border-red-500/50 hover:bg-red-950/20 text-slate-200 transition flex items-center gap-2 group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] text-slate-400 block">Mobile Phone</span>
+                      <span className="font-semibold text-emerald-300 group-hover:underline truncate">
+                        {selectedEmp.phone}
+                      </span>
+                    </div>
+                  </a>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-[#070c18] border border-[#1a2c5b] text-slate-500 flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>No Phone Provided</span>
+                  </div>
+                )}
+
+                {selectedEmp?.email ? (
+                  <a
+                    href={`mailto:${selectedEmp.email}`}
+                    className="p-2.5 rounded-xl bg-[#070c18] border border-[#1a2c5b] hover:border-red-500/50 hover:bg-red-950/20 text-slate-200 transition flex items-center gap-2 group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      <Mail className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] text-slate-400 block">Email Address</span>
+                      <span className="font-semibold text-blue-300 group-hover:underline truncate">
+                        {selectedEmp.email}
+                      </span>
+                    </div>
+                  </a>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-[#070c18] border border-[#1a2c5b] text-slate-500 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    <span>No Email Registered</span>
+                  </div>
+                )}
+
+                <div className="p-2.5 rounded-xl bg-[#070c18] border border-[#1a2c5b] flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <MapPin className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="truncate">
+                    <span className="text-[10px] text-slate-400 block">City & Branch</span>
+                    <span className="font-semibold text-amber-300 truncate">
+                      {selectedEmp?.branch || selectedEmp?.city || 'Unassigned'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 1: Organizational & Hierarchy */}
+              <div className="p-4 rounded-xl bg-[#070c18] border border-[#1a2c5b] space-y-3">
+                <h4 className="font-bold text-white flex items-center gap-2 text-xs uppercase tracking-wider text-red-400">
+                  <Building className="w-4 h-4 text-red-500" />
+                  <span>Organizational Hierarchy & Deployment</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Operational City</span>
+                    <span className="font-semibold text-white">{selectedEmp?.city || 'Not Specified'}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Assigned Branch Office</span>
+                    <span className="font-semibold text-amber-300">{selectedEmp?.branch || 'Not Specified'}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Reporting Project Coordinator</span>
+                    {selectedEmp?.assigned_coordinator_name ? (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-semibold text-white">{selectedEmp.assigned_coordinator_name}</span>
+                        {selectedEmp.assigned_coordinator_code && (
+                          <span className="text-[10px] font-mono text-amber-400">
+                            ({selectedEmp.assigned_coordinator_code})
+                          </span>
+                        )}
+                      </div>
+                    ) : selectedEmp?.role === 'COORDINATOR' ? (
+                      <span className="text-blue-300 font-medium">Regional Coordinator (Direct Admin Oversight)</span>
+                    ) : selectedEmp?.role === 'ADMIN' ? (
+                      <span className="text-amber-300 font-medium">Headquarters Administration</span>
+                    ) : (
+                      <span className="text-amber-400 italic">Unassigned (Direct Head Office)</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">System Role</span>
+                    <span className="font-semibold text-white">
+                      {selectedEmp?.role_display || selectedEmp?.role || 'Staff Member'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: Identity & Statutory Credentials */}
+              <div className="p-4 rounded-xl bg-[#070c18] border border-[#1a2c5b] space-y-3">
+                <h4 className="font-bold text-white flex items-center gap-2 text-xs uppercase tracking-wider text-amber-400">
+                  <IdCard className="w-4 h-4 text-amber-500" />
+                  <span>Identity & Statutory Particulars</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">System Login Username</span>
+                    <span className="font-mono font-semibold text-slate-200">@{selectedEmp?.username || '—'}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Government ID (PAN / Aadhaar)</span>
+                    <span className="font-mono font-semibold text-white">
+                      {selectedEmp?.pan_or_aadhaar || 'Not Recorded'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Joining Date</span>
+                    <span className="font-semibold text-white">{selectedEmp?.joining_date || 'Not Recorded'}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Emergency Contact</span>
+                    <span className="font-semibold text-slate-300">
+                      {selectedEmp?.emergency_contact || 'None Listed'}
+                    </span>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-400 text-[11px] block">Residential Address</span>
+                    <span className="font-semibold text-slate-300">
+                      {selectedEmp?.address || 'No residential address recorded.'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: Live Field Telemetry & GPS Tracking */}
+              <div className="p-4 rounded-xl bg-[#070c18] border border-[#1a2c5b] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-white flex items-center gap-2 text-xs uppercase tracking-wider text-emerald-400">
+                    <Navigation className="w-4 h-4 text-emerald-400" />
+                    <span>Live Field Telemetry & GPS Tracking</span>
+                  </h4>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                      selectedEmp?.gps_enabled
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {selectedEmp?.gps_enabled ? 'GPS Active' : 'GPS Standby'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Last Known Coordinates</span>
+                    {selectedEmp?.current_latitude && selectedEmp?.current_longitude ? (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="font-mono font-semibold text-white">
+                          {selectedEmp.current_latitude}, {selectedEmp.current_longitude}
+                        </span>
+                        <a
+                          href={`https://www.google.com/maps?q=${selectedEmp.current_latitude},${selectedEmp.current_longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-500/30 text-[10px] font-semibold flex items-center gap-1 hover:bg-blue-900 transition"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Maps</span>
+                        </a>
+                      </div>
+                    ) : (
+                      <span className="text-slate-500 italic">No GPS coordinates recorded yet</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Last Location Ping Time</span>
+                    <span className="font-semibold text-white">
+                      {selectedEmp?.last_location_time
+                        ? new Date(selectedEmp.last_location_time).toLocaleString()
+                        : 'No recent ping'}
+                    </span>
+                  </div>
+
+                  {selectedEmp?.device_info && (
+                    <div className="sm:col-span-2">
+                      <span className="text-slate-400 text-[11px] block">Registered Device / Client Terminal</span>
+                      <span className="font-mono text-[11px] text-slate-400">{selectedEmp.device_info}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-[#070c18] border-t border-[#1a2c5b] flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {selectedEmp?.id && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailModalOpen(false);
+                      openHistoryModal(selectedEmp.id);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-[#111e3f] hover:bg-[#1a2c5b] text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <History className="w-3.5 h-3.5 text-amber-400" />
+                    <span>View Lifetime History</span>
+                  </button>
+                )}
+
+                {isAdmin && selectedEmp?.id && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailModalOpen(false);
+                      openEditModal(selectedEmp);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900/80 text-red-200 border border-red-500/40 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Edit Particulars</span>
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDetailModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
