@@ -124,13 +124,13 @@ const Navbar = ({ currentTab, setCurrentTab, setMobileOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-[#090f22]/90 backdrop-blur-md border-b border-[#1a2c5b] px-4 py-3">
+    <header className="sticky top-0 z-30 bg-[#080d1a]/95 backdrop-blur-md border-b border-[#1a2749] px-4 py-3">
       <div className="flex items-center justify-between">
         {/* Left: Mobile hamburger & Title */}
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden p-2 rounded-lg bg-[#111e3f] text-slate-300 hover:text-white"
+            className="lg:hidden p-2 rounded-lg bg-[#121b33] text-slate-300 hover:text-white"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -140,7 +140,7 @@ const Navbar = ({ currentTab, setCurrentTab, setMobileOpen }) => {
             </h2>
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <Clock className="w-3.5 h-3.5 text-red-500" />
                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
               <span>•</span>
@@ -155,7 +155,7 @@ const Navbar = ({ currentTab, setCurrentTab, setMobileOpen }) => {
           {isSalesExecutive && (
             <div className="flex items-center space-x-2">
               {/* GPS status chip */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0c1530] border border-[#1a2c5b] text-[11px]">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0c1222] border border-[#1a2749] text-[11px]">
                 {user?.gps_enabled || gpsStatus === 'GRANTED' ? (
                   <>
                     <MapPin className="w-3.5 h-3.5 text-emerald-400" />
@@ -163,8 +163,8 @@ const Navbar = ({ currentTab, setCurrentTab, setMobileOpen }) => {
                   </>
                 ) : (
                   <>
-                    <MapPinOff className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-amber-300 font-medium">GPS Off</span>
+                    <MapPinOff className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-red-300 font-medium">GPS Off</span>
                   </>
                 )}
               </div>
@@ -195,12 +195,12 @@ const Navbar = ({ currentTab, setCurrentTab, setMobileOpen }) => {
           {/* User badge */}
           <div 
             onClick={() => setCurrentTab && setCurrentTab('profile')}
-            className="hidden md:flex items-center space-x-2 pl-3 border-l border-[#1a2c5b] hover:opacity-80 cursor-pointer transition"
+            className="hidden md:flex items-center space-x-2 pl-3 border-l border-[#1a2749] hover:opacity-80 cursor-pointer transition"
             title="Click to view/edit profile"
           >
             <div className="text-right">
               <p className="text-xs font-semibold text-slate-200">{user?.first_name || user?.username}</p>
-              <p className="text-[10px] text-amber-400/90 font-mono">{user?.employee_id}</p>
+              <p className="text-[10px] text-red-400 font-mono font-semibold">{user?.employee_id}</p>
             </div>
           </div>
         </div>

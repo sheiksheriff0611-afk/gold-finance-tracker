@@ -2,11 +2,23 @@ import React from 'react';
 
 const StatCard = ({ title, value, subValue, icon: Icon, color = 'gold', trend }) => {
   const colorStyles = {
+    red: {
+      bg: 'bg-red-500/15',
+      border: 'border-red-500/30',
+      text: 'text-red-400',
+      glow: 'shadow-red-500/10',
+    },
     gold: {
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/30',
-      text: 'text-amber-400',
-      glow: 'shadow-amber-500/5',
+      bg: 'bg-red-500/15',
+      border: 'border-red-500/30',
+      text: 'text-red-400',
+      glow: 'shadow-red-500/10',
+    },
+    silver: {
+      bg: 'bg-slate-400/10',
+      border: 'border-slate-400/30',
+      text: 'text-slate-300',
+      glow: 'shadow-slate-500/5',
     },
     emerald: {
       bg: 'bg-emerald-500/10',
@@ -28,10 +40,10 @@ const StatCard = ({ title, value, subValue, icon: Icon, color = 'gold', trend })
     },
   };
 
-  const current = colorStyles[color] || colorStyles.gold;
+  const current = colorStyles[color] || colorStyles.red;
 
   return (
-    <div className={`p-4 rounded-xl bg-[#0b1329] border ${current.border} shadow-lg ${current.glow} flex flex-col justify-between relative overflow-hidden transition-all duration-200 hover:border-amber-500/60`}>
+    <div className={`p-4 rounded-xl bg-[#0c1222] border ${current.border} shadow-lg ${current.glow} flex flex-col justify-between relative overflow-hidden transition-all duration-200 hover:border-red-500/60`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium text-slate-400">{title}</p>

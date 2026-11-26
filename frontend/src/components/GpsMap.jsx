@@ -18,7 +18,7 @@ import {
 // Custom colored SVG pin generator for Leaflet
 const createEmployeeIcon = (isWorking, isSelected = false) => {
   const fillColor = isWorking ? '#10B981' : '#64748B';
-  const strokeColor = isSelected ? '#F59E0B' : '#0B1329';
+  const strokeColor = isSelected ? '#DC2626' : '#0B1329';
   const size = isSelected ? 38 : 32;
 
   const svgHtml = `
@@ -57,8 +57,8 @@ const createVisitIcon = (purpose) => {
 const createGoldIcon = () => {
   return L.divIcon({
     html: `
-      <div style="width: 26px; height: 26px; background: #EAB308; border: 2px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
-        <span style="color: #070C18; font-size: 13px; font-weight: bold;">G</span>
+      <div style="width: 26px; height: 26px; background: #DC2626; border: 2px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+        <span style="color: #ffffff; font-size: 13px; font-weight: bold;">G</span>
       </div>
     `,
     className: 'custom-gold-marker',

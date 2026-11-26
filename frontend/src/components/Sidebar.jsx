@@ -51,22 +51,21 @@ const Sidebar = ({ currentTab, setCurrentTab, mobileOpen, setMobileOpen }) => {
       )}
 
       <aside className={`
-        fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#090f22] border-r border-[#1a2c5b] flex flex-col transition-transform duration-300 ease-in-out
+        fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#080d1a] border-r border-[#1a2749] flex flex-col transition-transform duration-300 ease-in-out
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Brand Header */}
-        <div className="p-5 border-b border-[#1a2c5b]/80 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-300 p-0.5 shadow-lg shadow-amber-500/20">
-              <div className="w-full h-full bg-[#090f22] rounded-[10px] flex items-center justify-center">
-                <Coins className="w-5 h-5 text-amber-400" />
-              </div>
+        {/* Brand Header with KGF Logo */}
+        <div className="p-4 border-b border-[#1a2749] bg-[#0c1222] flex items-center justify-between">
+          <div className="flex items-center space-x-3 w-full">
+            <div className="bg-white/95 p-1 rounded-xl border border-slate-300 shadow-md shadow-red-950/40 shrink-0">
+              <img src="/logo.png" alt="Karur Gold Finance (KGF)" className="h-9 w-auto object-contain" />
             </div>
-            <div>
-              <h1 className="font-bold tracking-wide text-white text-base flex items-center gap-1.5">
-                GOLD <span className="gold-gradient-text">FINANCE</span>
+            <div className="overflow-hidden">
+              <h1 className="font-extrabold tracking-wide text-white text-xs flex items-center gap-1">
+                <span>KARUR</span>
+                <span className="text-red-500">GOLD FINANCE</span>
               </h1>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Employee & Collections</p>
+              <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Employee & Collections</p>
             </div>
           </div>
         </div>

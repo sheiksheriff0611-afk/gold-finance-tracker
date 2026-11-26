@@ -202,7 +202,7 @@ const Reports = () => {
     value: Math.round(v)
   }));
 
-  const PIE_COLORS = ['#D4AF37', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
+  const PIE_COLORS = ['#DC2626', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
 
   return (
     <div className="space-y-6">
@@ -368,7 +368,7 @@ const Reports = () => {
                     itemStyle={{ color: '#ffffff' }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  <Bar dataKey="gold_achieved" name="Gold Achieved (g)" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="gold_achieved" name="Gold Achieved (g)" fill="#DC2626" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="gold_target" name="Gold Target (g)" fill="#475569" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

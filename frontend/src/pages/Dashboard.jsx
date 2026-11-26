@@ -213,10 +213,10 @@ const Dashboard = ({ setCurrentTab }) => {
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
                 <YAxis stroke="#64748b" fontSize={11} unit="g" />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#090f22', borderColor: '#d4af37', borderRadius: '8px', fontSize: '12px' }}
-                  itemStyle={{ color: '#fef08a' }}
+                  contentStyle={{ backgroundColor: '#0c1222', borderColor: '#dc2626', borderRadius: '8px', fontSize: '12px' }}
+                  itemStyle={{ color: '#fca5a5' }}
                 />
-                <Bar dataKey="gold_grams" name="Gold Weight (g)" fill="#eab308" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="gold_grams" name="Gold Weight (g)" fill="#dc2626" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
