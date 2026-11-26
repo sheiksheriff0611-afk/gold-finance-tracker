@@ -11,12 +11,6 @@ const Login = () => {
   const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState('');
 
-  // Background pre-warm: ping backend as soon as the login screen opens
-  // Ensures cloud server is already awake before user clicks submit
-  useEffect(() => {
-    api.get('/accounts/cities-branches/').catch(() => {});
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

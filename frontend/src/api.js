@@ -5,7 +5,7 @@ const BASE_URL = envApiUrl
   ? (envApiUrl.endsWith('/') ? envApiUrl.slice(0, -1) : envApiUrl)
   : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://127.0.0.1:8000'
-      : `http://${window.location.hostname}:8000`);
+      : 'https://gold-finance-tracker-1.onrender.com');
 
 const API_BASE_URL = `${BASE_URL}/api`;
 
@@ -32,13 +32,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // If unauthorized, clean stale tokens safely in storage
+    // NEVER call window.location.href here to avoid browser reload loops
     if (error.response && error.response.status === 401) {
-      // If unauthorized and not on login endpoint, clean tokens
-      if (!error.config.url.includes('/accounts/login/')) {
+      const url = error.config?.url || '';
+      if (!url.includes('/accounts/login/')) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        window.location.href = '/';
       }
     }
     return Promise.reject(error);

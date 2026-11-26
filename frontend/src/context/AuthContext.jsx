@@ -13,12 +13,13 @@ export const AuthProvider = ({ children }) => {
     }
   });
   const [token, setToken] = useState(() => localStorage.getItem('access_token'));
-  // Instant render if cached user session exists in local storage
-  const [loading, setLoading] = useState(() => !localStorage.getItem('user'));
+  const [loading, setLoading] = useState(false);
 
+  // Validate existing stored session ONCE on initial app mount only
+  // (Prevents double-render flickering when logging in)
   useEffect(() => {
-    if (token) {
-      // Validate/sync profile in the background without blocking render
+    const savedToken = localStorage.getItem('access_token');
+    if (savedToken) {
       api.get('/accounts/me/')
         .then((res) => {
           setUser(res.data);
@@ -28,12 +29,9 @@ export const AuthProvider = ({ children }) => {
           if (err.response && err.response.status === 401) {
             logout();
           }
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+        });
     }
-  }, [token]);
+  }, []);
 
   const login = async (username, password) => {
     const res = await api.post('/accounts/login/', { username, password });

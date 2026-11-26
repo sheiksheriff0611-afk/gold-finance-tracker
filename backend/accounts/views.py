@@ -619,7 +619,7 @@ def dashboard_stats_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def cities_branches_view(request):
     """
     Returns configured operational cities and their assigned branch offices
