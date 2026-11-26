@@ -104,8 +104,23 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 600,
         }
     }
+
+# Optimized Password Hasher (100,000 iterations for lightning-fast cloud verification while maintaining high security)
+from django.contrib.auth.hashers import PBKDF2PasswordHasher
+
+class FastPBKDF2PasswordHasher(PBKDF2PasswordHasher):
+    iterations = 100000
+
+PASSWORD_HASHERS = [
+    'gold_tracker.settings.FastPBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

@@ -1,24 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import { Lock, User, ShieldCheck, ArrowRight, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import api from '../api';
 
 const Login = () => {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState('');
+
+  // Background pre-warm: ping backend as soon as the login screen opens
+  // Ensures cloud server is already awake before user clicks submit
+  useEffect(() => {
+    api.get('/accounts/cities-branches/').catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setStatusMsg('Verifying credentials...');
+
+    // Timer to update status message if cloud server was in cold standby
+    const slowTimer = setTimeout(() => {
+      setStatusMsg('Connecting to secure cloud server...');
+    }, 1500);
+
     try {
       await login(username, password);
     } catch (err) {
+      clearTimeout(slowTimer);
       setError(err.response?.data?.error || 'Invalid credentials. Please verify your login details.');
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
+      setStatusMsg('');
     }
   };
 
@@ -27,12 +45,21 @@ const Login = () => {
     setPassword(p);
     setError('');
     setLoading(true);
+    setStatusMsg(`Signing in as ${u}...`);
+
+    const slowTimer = setTimeout(() => {
+      setStatusMsg('Waking cloud server & authenticating...');
+    }, 1500);
+
     try {
       await login(u, p);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed.');
+      clearTimeout(slowTimer);
+      setError(err.response?.data?.error || 'Login failed. Please check backend connection.');
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
+      setStatusMsg('');
     }
   };
 
@@ -117,8 +144,17 @@ const Login = () => {
               disabled={loading}
               className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-950/50 transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              <span>{loading ? 'Authenticating...' : 'Sign In to Portal'}</span>
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{statusMsg || 'Authenticating...'}</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In to Portal</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
@@ -131,22 +167,25 @@ const Login = () => {
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => handleQuickLogin('admin', 'admin123')}
-                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer"
+                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer disabled:opacity-50"
               >
                 Admin
               </button>
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => handleQuickLogin('coordinator1', 'coord123')}
-                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer"
+                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer disabled:opacity-50"
               >
                 Coordinator
               </button>
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => handleQuickLogin('executive1', 'exec123')}
-                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer"
+                className="py-1.5 px-2 rounded-lg bg-[#121b33] hover:bg-[#1a2749] border border-[#1a2749] hover:border-red-500/50 text-[11px] font-semibold text-red-300 transition text-center cursor-pointer disabled:opacity-50"
               >
                 Sales Exec
               </button>

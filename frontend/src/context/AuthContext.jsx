@@ -5,21 +5,29 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('access_token'));
-  const [loading, setLoading] = useState(true);
+  // Instant render if cached user session exists in local storage
+  const [loading, setLoading] = useState(() => !localStorage.getItem('user'));
 
   useEffect(() => {
     if (token) {
+      // Validate/sync profile in the background without blocking render
       api.get('/accounts/me/')
         .then((res) => {
           setUser(res.data);
           localStorage.setItem('user', JSON.stringify(res.data));
         })
-        .catch(() => {
-          logout();
+        .catch((err) => {
+          if (err.response && err.response.status === 401) {
+            logout();
+          }
         })
         .finally(() => setLoading(false));
     } else {
@@ -53,20 +61,21 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(res.data));
       return res.data;
     } catch (err) {
-      console.error("Failed to refresh user:", err);
+      console.error('Error refreshing user details:', err);
+      return null;
     }
   };
 
-  const toggleWorkShift = async (action, coords = null, notes = '', battery = null) => {
+  const toggleWorkShift = async (action, gpsCoords = null) => {
     try {
-      const payload = {
-        action,
-        latitude: coords ? coords.latitude : null,
-        longitude: coords ? coords.longitude : null,
-        battery: battery !== null ? battery : 90,
-        notes: notes || (action === 'START' ? 'Started Shift' : 'Ended Shift')
-      };
-      const res = await api.post('/tracking/toggle-work/', payload);
+      const payload = { action };
+      if (gpsCoords) {
+        payload.latitude = gpsCoords.latitude;
+        payload.longitude = gpsCoords.longitude;
+        payload.accuracy = gpsCoords.accuracy || 10;
+        payload.battery_level = gpsCoords.battery_level || 90;
+      }
+      const res = await api.post('/tracking/shift-toggle/', payload);
       await refreshUser();
       return res.data;
     } catch (err) {
@@ -74,23 +83,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      loading,
-      login,
-      logout,
-      refreshUser,
-      toggleWorkShift,
-      isAdmin: user?.role === 'ADMIN',
-      isCoordinator: user?.role === 'COORDINATOR',
-      isSalesExecutive: user?.role === 'SALES_EXECUTIVE',
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    logout,
+    refreshUser,
+    toggleWorkShift,
+    isAdmin: user?.role === 'ADMIN' || user?.is_superuser,
+    isCoordinator: user?.role === 'COORDINATOR',
+    isSalesExecutive: user?.role === 'SALES_EXECUTIVE',
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
+export default AuthContext;

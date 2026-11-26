@@ -25,18 +25,33 @@ from tracking.models import WorkShift, LocationPing
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+    username = str(request.data.get('username') or '').strip()
+    password = str(request.data.get('password') or '').strip()
 
     if not username or not password:
         return Response({'error': 'Please provide both username and password.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # 1. Fast authentication by username
     user = authenticate(username=username, password=password)
+
+    # 2. Flexible login: allow employee ID (e.g. ADM-1001, EMP-5001) or email
     if not user:
-        return Response({'error': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+        user_candidate = User.objects.filter(
+            Q(employee_id__iexact=username) | Q(email__iexact=username)
+        ).first()
+        if user_candidate and user_candidate.check_password(password):
+            user = user_candidate
+
+    if not user:
+        return Response({'error': 'Invalid credentials. Please verify your login details.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if user.status == 'INACTIVE':
         return Response({'error': 'Account is inactive. Please contact administration.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # 3. Auto-upgrade password hash to FastPBKDF2Hasher if using legacy high-iteration hash
+    if '$1500000$' in (user.password or ''):
+        user.set_password(password)
+        user.save(update_fields=['password'])
 
     refresh = RefreshToken.for_user(user)
     serializer = UserSerializer(user)
@@ -83,6 +98,21 @@ def setup_admin_view(request):
     admin_user.role = 'ADMIN'
     admin_user.save()
     messages.append("Admin account enabled: username 'admin', password 'admin123'.")
+
+    # Upgrade all demo users to FastPBKDF2 hasher
+    passwords_map = {
+        'admin': 'admin123',
+        'coordinator1': 'coord123',
+        'coordinator2': 'coord123',
+        'executive1': 'exec123',
+        'executive2': 'exec123',
+        'executive3': 'exec123'
+    }
+    for uname, pword in passwords_map.items():
+        u = User.objects.filter(username=uname).first()
+        if u:
+            u.set_password(pword)
+            u.save(update_fields=['password'])
 
     try:
         import seed_data
